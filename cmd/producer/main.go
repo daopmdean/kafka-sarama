@@ -18,8 +18,13 @@ func main() {
 
 	msg := &sarama.ProducerMessage{
 		Topic: "test-topic",
-		Key:   sarama.StringEncoder("Key"),
-		Value: sarama.StringEncoder(fmt.Sprintf("Message value %d", rand.Intn(math.MaxInt32))),
+		Key:   sarama.StringEncoder(fmt.Sprintf("key-%d", rand.Intn(2))),
+		Headers: []sarama.RecordHeader{
+			{Key: []byte("header-key"), Value: []byte("header-value")},
+			{Key: []byte("header-key"), Value: []byte("header-value-duplicate")},
+			{Key: []byte("header-key-2"), Value: []byte("header-value")},
+		},
+		Value: sarama.StringEncoder(fmt.Sprintf(`{"orderId":123,"status":"created","message":"value %d"}`, rand.Intn(math.MaxInt32))),
 	}
 
 	partition, offset, err := producer.SendMessage(msg)
