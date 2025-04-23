@@ -39,8 +39,7 @@ func (c *Consumer) ConsumeClaim(session sarama.ConsumerGroupSession, claim saram
 func main() {
 	brokers := []string{"localhost:9092"}
 	groupID := "my-consumer-group-2"
-	topic := "my-topic"
-	testTopic := "test-topic"
+	topics := []string{"my-topic", "test-topic"}
 
 	config := sarama.NewConfig()
 	config.Version = sarama.V2_8_0_0                 // Match your Kafka version
@@ -64,13 +63,13 @@ func main() {
 		cancel()
 	}()
 
-	for i, v := range []string{topic, testTopic} {
+	for i, v := range topics {
 		log.Printf("Topic %d: %s\n", i, v)
 	}
 
 	log.Println("Starting consumer group...")
 	for {
-		if err := group.Consume(ctx, []string{topic, testTopic}, consumer); err != nil {
+		if err := group.Consume(ctx, topics, consumer); err != nil {
 			log.Printf("Error during consumption: %v", err)
 		}
 		if ctx.Err() != nil {
