@@ -11,6 +11,7 @@ type MyConsumer struct {
 }
 
 func (c *MyConsumer) Setup(sarama.ConsumerGroupSession) error {
+	close(c.ready) // signal that the consumer is ready
 	return nil
 }
 
@@ -18,7 +19,7 @@ func (c *MyConsumer) Cleanup(sarama.ConsumerGroupSession) error {
 	return nil
 }
 
-func (c *MyConsumer) ConsumeClaim(sarama.ConsumerGroupSession, sarama.ConsumerGroupClaim) error {
+func (c *MyConsumer) ConsumeClaim(session sarama.ConsumerGroupSession, claim sarama.ConsumerGroupClaim) error {
 	return nil
 }
 
@@ -31,8 +32,18 @@ func main() {
 		panic(err)
 	}
 
-	err = group.Consume(context.Background(), []string{"my-topic"}, &MyConsumer{})
-	if err != nil {
-		panic(err)
-	}
+	consumer := MyConsumer{}
+
+	go func() {
+		for {
+			err := group.Consume(context.Background(), []string{"my-topic"}, &consumer)
+			if err != nil {
+				panic(err)
+			}
+			consumer.ready = make(chan bool)
+		}
+	}()
+
+	<-consumer.ready
+
 }
