@@ -17,7 +17,7 @@ func main() {
 	defer producer.Close()
 
 	msg := &sarama.ProducerMessage{
-		Topic: "test-topic",
+		Topic: "my-topic",
 		Key:   sarama.StringEncoder(fmt.Sprintf("key-%d", rand.Intn(2))),
 		Headers: []sarama.RecordHeader{
 			{Key: []byte("header-key"), Value: []byte("header-value")},
