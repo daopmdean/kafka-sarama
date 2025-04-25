@@ -24,3 +24,9 @@ Run consumer
 ```
 go run cmd/consumer/main.go 
 ```
+
+consumergroup2, signal pause/resume
+```
+kill -SIGUSR1 <pid>
+kill -SIGUSR1 12345
+```

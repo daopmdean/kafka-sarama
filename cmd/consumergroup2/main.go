@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"os"
 	"os/signal"
+	"syscall"
 
 	"github.com/IBM/sarama"
 )
@@ -75,17 +76,32 @@ func main() {
 	<-consumer.ready
 	fmt.Println("Consumer is ready")
 
-	keep := true
+	keep, pause := true, false
 
 	// Wait for a signal to exit
 	sigterm := make(chan os.Signal, 1)
 	signal.Notify(sigterm, os.Interrupt)
+
+	siguser := make(chan os.Signal, 1)
+	signal.Notify(siguser, syscall.SIGUSR1)
+	fmt.Println("Signal to pause/resume consumption: SIGUSR1", os.Getpid())
 
 	for keep {
 		select {
 		case <-sigterm:
 			fmt.Println("terminating: Received interrupt signal")
 			keep = false
+		case <-siguser:
+			if pause {
+				pause = false
+				group.ResumeAll()
+				fmt.Println("Resuming consumption")
+			} else {
+				pause = true
+				group.PauseAll()
+				fmt.Println("Pausing consumption")
+			}
+
 		case <-ctx.Done():
 			fmt.Println("terminating: Context done")
 			keep = false
